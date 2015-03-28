@@ -6,4 +6,6 @@
     <string name="manager_toggle_start">Start</string>
     <string name="manager_toggle_stop">Stop</string>
     <string name="title_activity_startup">StartupActivity</string>
+    <string name="shared_prefs_file">MythosSharedPrefs</string>
+    <string name="shared_prefs_uuid">UUID</string>
 </resources>

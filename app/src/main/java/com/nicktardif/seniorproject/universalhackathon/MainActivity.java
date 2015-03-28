@@ -1,5 +1,7 @@
 package com.nicktardif.seniorproject.universalhackathon;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,10 +15,41 @@ import com.radiusnetworks.proximity.ProximityKitBeacon;
 
 import java.util.Calendar;
 
+import retrofit.Callback;
+import retrofit.RestAdapter;
+import retrofit.RetrofitError;
+import retrofit.client.Response;
+import retrofit.converter.GsonConverter;
+
 
 public class MainActivity extends ActionBarActivity {
-    public static final String TAG = "MainActivity";
-    public static boolean isRunning = false;
+    public RestAdapter restAdapter;
+    public MythosService mythosService;
+    public String UUID;
+
+    private Callback<GetUUIDResponse> getUUIDCallback = new Callback<GetUUIDResponse>() {
+        @Override
+        public void success(GetUUIDResponse uuidResponse, Response response) {
+            boolean success = uuidResponse.success;
+            String uuid =  uuidResponse.uuid;
+            int length = uuidResponse.length;
+
+            // Store the UUID in the SharedPreferences
+            SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(getString(R.string.shared_prefs_file), Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(getString(R.string.shared_prefs_uuid), uuid);
+            editor.commit();
+
+            Log.d("ticknardif", "Stored " + uuid + " as the UUID");
+
+            UUID = uuid;
+        }
+
+        @Override
+        public void failure(RetrofitError error) {
+            Log.d("ticknardif", error.getMessage());
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,6 +59,23 @@ public class MainActivity extends ActionBarActivity {
         ((AndroidProximityKitReferenceApplication) getApplication()).setMainActivity(this);
         AndroidProximityKitReferenceApplication app = (AndroidProximityKitReferenceApplication) getApplication();
         app.startManager();
+
+        // Establish our web server
+        restAdapter = new RestAdapter.Builder().setEndpoint("http://www.swamphacks.io").build();
+        mythosService = restAdapter.create(MythosService.class);
+
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(getString(R.string.shared_prefs_file), Context.MODE_PRIVATE);
+        UUID = sharedPreferences.getString(getString(R.string.shared_prefs_uuid), "");
+
+        // If we don't have a saved UUID, this is the first time they have opened the app
+        // Make them get a UUID
+        if (UUID.equals("")) {
+            Log.d("ticknardif", "Requesting a UUID");
+            // Request a unique identifier from the API
+            mythosService.getUUID("uf2015", getUUIDCallback);
+        } else {
+            Log.d("ticknardif", "Already have a UUID: " + UUID);
+        }
     }
 
 
