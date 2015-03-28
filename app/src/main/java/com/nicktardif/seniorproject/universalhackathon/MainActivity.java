@@ -7,8 +7,11 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import com.radiusnetworks.proximity.ProximityKitBeacon;
+
+import java.util.Calendar;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -21,11 +24,8 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         ((AndroidProximityKitReferenceApplication) getApplication()).setMainActivity(this);
-        if (isRunning) {
-            startManager();
-        } else {
-            stopManager();
-        }
+        AndroidProximityKitReferenceApplication app = (AndroidProximityKitReferenceApplication) getApplication();
+        app.startManager();
     }
 
 
@@ -51,53 +51,30 @@ public class MainActivity extends ActionBarActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void displayTableRow(final ProximityKitBeacon beacon, final String displayString, final boolean updateIfExists) {
-        String uuid = beacon.getId1().toUuidString(); //UUID
-        String id2 = beacon.getId2().toString();
-        String id3 = beacon.getId3().toString();
-        String display = displayString;
-        Log.d("ticknardif", "UUID string: " + uuid);
-        Log.d("ticknardif", "ID2 string: " + id2);
-        Log.d("ticknardif", "ID3 string: " + id3);
-        Log.d("ticknardif", "Display string: " + display);
-    }
+    public void detectedBeacon(final ProximityKitBeacon beacon, final String displayString, final boolean updateIfExists) {
+        final String uuid = beacon.getId1().toUuidString(); //UUID
+        final String id2 = beacon.getId2().toString();
+        final String id3 = beacon.getId3().toString();
+        final String display = displayString;
 
-    /**
-     * Button action which turn the Proximity Kit manager service on and off.
-     *
-     * @param view  button object which was pressed
-     */
-    public void toggleManager(View view) {
-        if (view.getId() != R.id.manager_toggle) { return; }
+        final TextView uuidTV = (TextView) findViewById(R.id.uuid_value);
+        final TextView id2TV = (TextView) findViewById(R.id.id2_value);
+        final TextView id3TV = (TextView) findViewById(R.id.id3_value);
+        final TextView timeTV = (TextView) findViewById(R.id.time_value);
+        Calendar c = Calendar.getInstance();
+        int hour = c.get(Calendar.HOUR_OF_DAY);
+        int minutes = c.get(Calendar.MINUTE);
+        int seconds = c.get(Calendar.SECOND);
+        final String time_hms = Integer.toString(hour) + ":" + Integer.toString(minutes) + "." + Integer.toString(seconds);
 
-        if (isRunning) {
-            stopManager();
-            isRunning = false;
-        } else {
-            startManager();
-            isRunning = true;
-        }
-    }
-
-    /**
-     * Turn the Proximity Kit manager on and update the UI accordingly.
-     */
-    private void startManager() {
-        AndroidProximityKitReferenceApplication app = (AndroidProximityKitReferenceApplication) getApplication();
-        Button btn = (Button) findViewById(R.id.manager_toggle);
-
-        app.startManager();
-        btn.setText(R.string.manager_toggle_stop);
-    }
-
-    /**
-     * Turn the Proximity Kit manager off and update the UI accordingly.
-     */
-    private void stopManager() {
-        AndroidProximityKitReferenceApplication app = (AndroidProximityKitReferenceApplication) getApplication();
-        Button btn = (Button) findViewById(R.id.manager_toggle);
-
-        app.stopManager();
-        btn.setText(R.string.manager_toggle_start);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                uuidTV.setText(uuid);
+                id2TV.setText(id2);
+                id3TV.setText(id3);
+                timeTV.setText(time_hms);
+            }
+        });
     }
 }

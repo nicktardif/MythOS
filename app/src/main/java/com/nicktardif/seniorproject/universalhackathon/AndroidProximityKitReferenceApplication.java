@@ -319,7 +319,7 @@ public class AndroidProximityKitReferenceApplication
         );
 
         // Attempt to open the app now that we've entered a region if we started in the background
-        tryAutoLaunch();
+        //tryAutoLaunch();
 
         // Notify the user that we've seen a beacon
         sendNotification(region);
@@ -395,7 +395,7 @@ public class AndroidProximityKitReferenceApplication
                 "\nWelcome message: " + beacon.getAttributes().get("welcomeMessage");
 
         // We've elected to notify our only view of the beacon and a message to display
-        mainActivity.displayTableRow(beacon, displayString, true);
+        mainActivity.detectedBeacon(beacon, displayString, true);
     }
 
     /**
