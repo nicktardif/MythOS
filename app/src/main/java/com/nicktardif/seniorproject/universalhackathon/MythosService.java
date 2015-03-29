@@ -14,4 +14,8 @@ public interface MythosService {
     @FormUrlEncoded
     @POST("/uuid")
     void getUUID(@Field("api_key") String api_key, Callback<GetUUIDResponse> res);
+
+    @FormUrlEncoded
+    @POST("/seen/{beaconID}/{uuid}")
+    void seenBeacon(@Field("api_key") String api_key, @Path("beaconID") String beaconID, @Path("uuid") String uuid, Callback<SeenBeaconResponse> res);
 }

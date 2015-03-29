@@ -10,10 +10,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.radiusnetworks.proximity.ProximityKitBeacon;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -26,6 +29,7 @@ public class MainActivity extends ActionBarActivity {
     public RestAdapter restAdapter;
     public MythosService mythosService;
     public String UUID;
+    public ArrayList<LastConnectedBeacon> connectedBeacons;
 
     private Callback<GetUUIDResponse> getUUIDCallback = new Callback<GetUUIDResponse>() {
         @Override
@@ -51,10 +55,28 @@ public class MainActivity extends ActionBarActivity {
         }
     };
 
+    private Callback<SeenBeaconResponse> seenBeaconCallback = new Callback<SeenBeaconResponse>() {
+        @Override
+        public void success(SeenBeaconResponse seenBeaconResponse, Response response) {
+            if(seenBeaconResponse.success) {
+                Object data = seenBeaconResponse.data;
+
+                Log.d("ticknardif", "Printing");
+            }
+        }
+
+        @Override
+        public void failure(RetrofitError error) {
+            Log.e("ticknardif", error.getMessage());
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        connectedBeacons = new ArrayList<LastConnectedBeacon>();
 
         ((AndroidProximityKitReferenceApplication) getApplication()).setMainActivity(this);
         AndroidProximityKitReferenceApplication app = (AndroidProximityKitReferenceApplication) getApplication();
@@ -105,7 +127,6 @@ public class MainActivity extends ActionBarActivity {
         final String uuid = beacon.getId1().toUuidString(); //UUID
         final String id2 = beacon.getId2().toString();
         final String id3 = beacon.getId3().toString();
-        final String display = displayString;
 
         final TextView uuidTV = (TextView) findViewById(R.id.uuid_value);
         final TextView id2TV = (TextView) findViewById(R.id.id2_value);
@@ -116,6 +137,35 @@ public class MainActivity extends ActionBarActivity {
         int minutes = c.get(Calendar.MINUTE);
         int seconds = c.get(Calendar.SECOND);
         final String time_hms = Integer.toString(hour) + ":" + Integer.toString(minutes) + "." + Integer.toString(seconds);
+
+        int UPDATE_INTERVAL = 10;
+        LastConnectedBeacon newBeacon = new LastConnectedBeacon(uuid, Integer.parseInt(id2), Integer.parseInt(id3), System.currentTimeMillis() / 1000);
+        boolean exists = false;
+
+        for(LastConnectedBeacon existingBeacon : connectedBeacons) {
+            if(existingBeacon.UUID.equals(newBeacon.UUID) && existingBeacon.major == newBeacon.major && existingBeacon.minor == newBeacon.minor) {
+
+                // This beacon already exists in the phone
+                exists = true;
+                Log.d("ticknardif", "Beacon " + existingBeacon.UUID + " exists in the list already");
+                long secondsDifference = newBeacon.lastConnectedTime - existingBeacon.lastConnectedTime;
+                Log.d("ticknardif", "Seconds difference is " + Long.toString(secondsDifference));
+
+                // If it was accessed more than 10 seconds ago, update the list
+                if(secondsDifference > 10) {
+                    existingBeacon.lastConnectedTime = newBeacon.lastConnectedTime;
+                    Log.d("ticknardif", "Updated last connection time of beacon " + existingBeacon.UUID);
+                    mythosService.seenBeacon("uf2015", existingBeacon.createBeaconID(), UUID, seenBeaconCallback);
+                }
+            }
+        }
+
+        // If this beacon doesn't exist, add it immediately
+        if(!exists) {
+            Log.d("ticknardif", "Adding beacon " + newBeacon.UUID + " to the list");
+            connectedBeacons.add(newBeacon);
+            //TODO: New beacon API call
+        }
 
         runOnUiThread(new Runnable() {
             @Override

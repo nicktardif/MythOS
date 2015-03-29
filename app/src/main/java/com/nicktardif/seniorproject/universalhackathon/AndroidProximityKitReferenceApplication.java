@@ -322,7 +322,7 @@ public class AndroidProximityKitReferenceApplication
         //tryAutoLaunch();
 
         // Notify the user that we've seen a beacon
-        sendNotification(region);
+        //sendNotification(region);
     }
 
     @Override
