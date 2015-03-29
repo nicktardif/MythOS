@@ -8,4 +8,5 @@
     <string name="title_activity_startup">MythOS</string>
     <string name="shared_prefs_file">MythosSharedPrefs</string>
     <string name="shared_prefs_uuid">UUID</string>
+    <string name="title_activity_friends_list">FriendsListActivity</string>
 </resources>
