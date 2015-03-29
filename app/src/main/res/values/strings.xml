@@ -1,11 +1,11 @@
 <resources>
-    <string name="app_name">UniversalHackathon</string>
+    <string name="app_name">MythOS</string>
 
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="manager_toggle_start">Start</string>
     <string name="manager_toggle_stop">Stop</string>
-    <string name="title_activity_startup">StartupActivity</string>
+    <string name="title_activity_startup">MythOS</string>
     <string name="shared_prefs_file">MythosSharedPrefs</string>
     <string name="shared_prefs_uuid">UUID</string>
 </resources>
