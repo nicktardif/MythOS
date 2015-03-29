@@ -1,9 +1,14 @@
 package com.nicktardif.seniorproject.universalhackathon;
 
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.os.Build;
+import android.speech.tts.TextToSpeech;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -23,6 +28,7 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
 import com.radiusnetworks.proximity.ProximityKitBeacon;
 
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,6 +36,11 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Iterator;
+
+import java.io.IOException;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Locale;
 
 import retrofit.Callback;
 import retrofit.RestAdapter;
@@ -43,6 +54,15 @@ public class MainActivity extends ActionBarActivity {
     public MythosService mythosService;
     public String UUID;
     public ArrayList<LastConnectedBeacon> connectedBeacons;
+    MediaPlayer mMediaPlayer;
+    //MediaPlayer mMediaPlayer1;
+    //MediaPlayer mMediaPlayer2;
+    //String url;
+    TextToSpeech tts;
+    String text;
+    //int index;
+    //String [] mp3Files = new String[3];
+
 
     private Callback<GetUUIDResponse> getUUIDCallback = new Callback<GetUUIDResponse>() {
         @Override
@@ -117,6 +137,75 @@ public class MainActivity extends ActionBarActivity {
         }
 
         showQRImage(400, 400);
+
+        //Sound URLs
+        //mp3Files[0] = "http://www.stephaniequinn.com/Music/Commercial%20DEMO%20-%2015.mp3";
+        //mp3Files[1] = "http://incompetech.com/music/royalty-free/mp3-royaltyfree/Hyperfun.mp3";
+        //mp3Files[2] = "http://incompetech.com/music/royalty-free/mp3-royaltyfree/Severe%20Tire%20Damage.mp3";
+
+        text = "wow this app is so great omg this is so cool i am so impressed";
+
+        //playSoundURL(mp3Files[0]);
+        textToSpeech(text);
+        //playSoundURL(mp3Files[2]);
+    }
+
+
+    //Plays a sounds from an URL
+    public void playSoundURL(final String soundURL){
+        mMediaPlayer = new MediaPlayer();
+        mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        //mMediaPlayer1 = new MediaPlayer();
+        //mMediaPlayer1.setAudioStreamType(AudioManager.STREAM_MUSIC);
+
+        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                mp.start();
+            }
+        });
+
+        try {
+            mMediaPlayer.stop();
+            mMediaPlayer.reset();
+
+            mMediaPlayer.setDataSource(soundURL);
+            mMediaPlayer.prepareAsync();
+            //mMediaPlayer1.setDataSource(soundURL);
+            //mMediaPlayer1.prepareAsync();
+
+            //mMediaPlayer.setNextMediaPlayer(mMediaPlayer1);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    //Text to Speech
+    public void textToSpeech(String textToSpeech){
+        text = textToSpeech;
+
+        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+                if(i == TextToSpeech.SUCCESS){
+                    int result=tts.setLanguage(Locale.US);
+                    tts.speak(text, TextToSpeech.QUEUE_ADD, null);
+                    if(result==TextToSpeech.LANG_MISSING_DATA ||
+                            result==TextToSpeech.LANG_NOT_SUPPORTED){
+                        Log.e("error", "This Language is not supported");
+                    }
+                }
+                else
+                    Log.e("error", "Initilization Failed!");
+            }
+        });
     }
 
 
@@ -162,8 +251,8 @@ public class MainActivity extends ActionBarActivity {
         LastConnectedBeacon newBeacon = new LastConnectedBeacon(uuid, Integer.parseInt(id2), Integer.parseInt(id3), System.currentTimeMillis() / 1000);
         boolean exists = false;
 
-        for(LastConnectedBeacon existingBeacon : connectedBeacons) {
-            if(existingBeacon.UUID.equals(newBeacon.UUID) && existingBeacon.major == newBeacon.major && existingBeacon.minor == newBeacon.minor) {
+        for (LastConnectedBeacon existingBeacon : connectedBeacons) {
+            if (existingBeacon.UUID.equals(newBeacon.UUID) && existingBeacon.major == newBeacon.major && existingBeacon.minor == newBeacon.minor) {
 
                 // This beacon already exists in the phone
                 exists = true;
@@ -183,7 +272,7 @@ public class MainActivity extends ActionBarActivity {
         }
 
         // If this beacon doesn't exist, add it immediately
-        if(!exists) {
+        if (!exists) {
             Log.d("ticknardif", "Adding beacon " + newBeacon.UUID + " to the list");
             connectedBeacons.add(newBeacon);
             //TODO: New beacon API call
